@@ -1,0 +1,256 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.role-card {
+    background: white;
+    border-radius: 15px;
+    padding: 40px 30px;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    height: 100%;
+}
+
+.role-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.waiter-card:hover {
+    border: 2px solid #0d6efd;
+}
+
+.kitchen-card:hover {
+    border: 2px solid #198754;
+}
+
+.admin-card:hover {
+    border: 2px solid #6c757d;
+}
+
+.role-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+}
+
+.role-card h2 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.role-card p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.menu-section {
+    background-color: #fff;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid #dee2e6;
+}
+
+.cart-section {
+    background-color: #f8f9fa;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.menu-item {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 15px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    height: 100%;
+}
+
+.menu-item:hover {
+    border-color: #0d6efd;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.menu-item h5 {
+    color: #333;
+    margin-bottom: 5px;
+    font-size: 1rem;
+}
+
+.menu-item .price {
+    color: #198754;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.menu-item .description {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+.menu-item .category {
+    background-color: #e7f3ff;
+    color: #0d6efd;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+.cart-items {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.cart-item {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #dee2e6;
+}
+
+.cart-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.cart-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.qty-btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.quantity {
+    font-weight: bold;
+    min-width: 30px;
+    text-align: center;
+}
+
+.cart-summary {
+    background: white;
+    border-radius: 8px;
+    border: 2px solid #0d6efd;
+}
+
+.order-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    border: 2px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.order-card.status-pending {
+    border-color: #ffc107;
+    background-color: #fff9e6;
+}
+
+.order-card.status-received {
+    border-color: #17a2b8;
+    background-color: #e6f7f9;
+}
+
+.order-card.status-cooking {
+    border-color: #fd7e14;
+    background-color: #fff3e6;
+}
+
+.order-card.status-ready {
+    border-color: #198754;
+    background-color: #e6f9f0;
+}
+
+.order-header {
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.order-number {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #0d6efd;
+}
+
+.order-time {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.order-items {
+    margin: 15px 0;
+}
+
+.order-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.order-total {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #198754;
+}
+
+.status-badge {
+    font-size: 0.9rem;
+    padding: 5px 12px;
+}
+
+.status-buttons .btn {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.new-order-pulse {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
+}
+
+@media (max-width: 991px) {
+
+    .menu-section,
+    .cart-section {
+        height: auto;
+    }
+}

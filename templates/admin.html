@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS 系統 - 菜單管理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1,
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        form {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 10px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #4cae4c;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #eee;
+        }
+
+        .delete-btn {
+            background-color: #d9534f;
+        }
+
+        .delete-btn:hover {
+            background-color: #c9302c;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>菜單管理中心</h1>
+        <h2>新增/修改菜單項目</h2>
+        <form method="POST" action="{{ url_for('admin_menu') }}">
+            <input type="hidden" name="action" value="add_or_update">
+            <label for="category">類別:</label>
+            <select id="category" name="category" required>
+                <option value="主菜">主菜</option>
+                <option value="甜點">甜點</option>
+                <option value="飲料">飲料</option>
+                <option value="套餐">套餐</option>
+            </select><br>
+            <label for="name">品名:</label>
+            <input type="text" id="name" name="name" required><br>
+            <label for="price">價格:</label>
+            <input type="number" id="price" name="price" step="0.01" required><br>
+            <label for="description">介紹:</label>
+            <textarea id="description" name="description"></textarea><br>
+            <button type="submit">新增/修改項目</button>
+        </form>
+        <h2>現有菜單列表</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>類別</th>
+                    <th>品名</th>
+                    <th>價格</th>
+                    <th>介紹</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in menu_items %}
+                <tr>
+                    <td>{{ item['id'] }}</td>
+                    <td>{{ item['category'] }}</td>
+                    <td>{{ item['name'] }}</td>
+                    <td>NT$ {{ item['price'] | round(2) }}</td>
+                    <td>{{ item['description'] }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin_menu') }}" style="display:inline;">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="item_id" value="{{ item['id'] }}">
+                            <button type="submit" class="delete-btn"
+                                onclick="return confirm('確定刪除 {{ item['name'] }} 嗎?');">刪除</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>

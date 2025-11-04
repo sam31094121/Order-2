@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服務員點餐系統 - 餐廳點餐</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">👨‍💼 服務員點餐系統</span>
+            <a href="/" class="btn btn-outline-light btn-sm">← 返回首頁</a>
+        </div>
+    </nav>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-7 menu-section p-4">
+                <h3 class="mb-3">菜單</h3>
+                <div id="menu-container" class="row g-3">
+                    <div class="col-12 text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">載入菜單中...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 cart-section p-4">
+                <h3 class="mb-3">當前訂單</h3>
+                <div id="cart-items" class="cart-items mb-3">
+                    <p class="text-muted text-center py-4">購物車是空的。請從菜單新增項目。</p>
+                </div>
+                <div class="mb-3">
+                    <label for="order-notes" class="form-label">訂單備註（選填）</label>
+                    <textarea id="order-notes" class="form-control" rows="2" placeholder="特殊要求、過敏源等..."></textarea>
+                </div>
+                <div class="cart-summary p-3 mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <strong>總計：</strong>
+                        <strong id="cart-total" class="fs-4 text-primary">$0.00</strong>
+                    </div>
+                </div>
+                <div class="d-grid gap-2">
+                    <button id="submit-order-btn" class="btn btn-success btn-lg" disabled>📋 送單至廚房</button>
+                    <button id="clear-cart-btn" class="btn btn-outline-secondary">🗑️ 清空購物車</button>
+                </div>
+                <div id="order-status" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="orderSuccessModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">✅ 訂單已送出！</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="mb-3">
+                        <div class="display-1">🎉</div>
+                    </div>
+                    <h4>訂單編號：<span id="modal-order-number" class="text-primary"></span></h4>
+                    <p class="text-muted">訂單已成功送至廚房！</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">開始新訂單</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/waiter.js') }}"></script>
+</body>
+
+</html>
