@@ -132,3 +132,4 @@ def get_sales_analytics(date_filter, category_filter):
         return {"error": f"JSON 解析錯誤: {str(e)}"}
     except Exception as e:
         return {"error": f"數據處理錯誤: {str(e)}"}
+
