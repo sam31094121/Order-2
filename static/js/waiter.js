@@ -72,7 +72,8 @@ function addToCart(itemId) {
             id: menuItem.id,
             name: menuItem.name,
             price: menuItem.price,
-            quantity: 1
+            quantity: 1,
+            category: menuItem.category
         });
     }
     updateCart();
@@ -130,12 +131,30 @@ function removeFromCart(index) {
 function updateTotal() {
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
+    calculateChange(); // 觸發找零計算
+}
+
+function calculateChange() {
+    const total = parseFloat(document.getElementById('cart-total').textContent.replace('$', '')) || 0;
+    const payment = parseFloat(document.getElementById('payment-amount').value) || 0;
+    const changeSpan = document.getElementById('change-amount');
+    const errorSpan = document.getElementById('payment-error');
+    const change = payment - total;
+
+    if (change >= 0) {
+        changeSpan.textContent = `找零：$${change.toFixed(2)}`;
+        errorSpan.textContent = '';
+    } else {
+        changeSpan.textContent = `找零：$0.00`;
+        errorSpan.textContent = `付款不足 $${(-change).toFixed(2)}`;
+    }
 }
 
 function clearCart() {
     cart = [];
     updateCart();
     document.getElementById('order-notes').value = '';
+    calculateChange(); // 清除購物車時重置找零
 }
 
 async function submitOrder() {
@@ -145,12 +164,18 @@ async function submitOrder() {
     }
     const notes = document.getElementById('order-notes').value;
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const payment = parseFloat(document.getElementById('payment-amount').value) || 0;
+    if (payment < total) {
+        showNotification('付款金額不足，無法提交！', 'danger');
+        return;
+    }
     const orderData = {
         items: cart.map(item => ({
             id: item.id,
             name: item.name,
             price: item.price,
-            quantity: item.quantity
+            quantity: item.quantity,
+            category: item.category
         })),
         total_amount: total,
         notes: notes
@@ -186,5 +211,5 @@ function showNotification(message, type = 'info') {
 
 document.getElementById('submit-order-btn').addEventListener('click', submitOrder);
 document.getElementById('clear-cart-btn').addEventListener('click', clearCart);
-
+document.getElementById('payment-amount').addEventListener('input', calculateChange); // 付款輸入觸發找零
 loadMenu();
