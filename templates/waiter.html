@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
     <nav class="navbar navbar-dark bg-primary">
         <div class="container-fluid">
@@ -41,6 +39,14 @@
                     <div class="d-flex justify-content-between mb-2">
                         <strong>總計：</strong>
                         <strong id="cart-total" class="fs-4 text-primary">$0.00</strong>
+                    </div>
+                    <div class="mb-2">
+                        <label for="payment-amount" class="form-label">付款金額 (NT$)</label>
+                        <input type="number" id="payment-amount" class="form-control" min="0" step="0.01" placeholder="輸入付款金額" required>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span id="change-amount" class="text-success">找零：$0.00</span>
+                        <span id="payment-error" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="d-grid gap-2">
@@ -75,5 +81,4 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="{{ url_for('static', filename='js/waiter.js') }}"></script>
 </body>
-
 </html>
