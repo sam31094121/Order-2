@@ -4,6 +4,7 @@ from flask_socketio import SocketIO
 from datetime import datetime
 import json
 from urllib.parse import urlparse
+import logging
 
 # 初始化 Flask 應用程式
 app = Flask(__name__)
@@ -29,30 +30,34 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 # 導入資料庫和模型
 from flask_sqlalchemy import SQLAlchemy
-from database import db, MenuItem, Order, get_sales_analytics  # 導入 get_sales_analytics
+from database import db, MenuItem, Order, get_sales_analytics
 db.init_app(app)
 socketio = SocketIO(app, async_mode='gevent')
 
-# 創建資料庫表（僅在應用程式啟動時執行一次）
+# 設定日誌
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# 創建資料庫表
 with app.app_context():
     db.create_all()
 
-# 根路由：顯示主頁
+# 根路由
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# 服務員頁面路由：顯示點餐與結帳頁面
+# 服務員頁面路由
 @app.route("/waiter")
 def waiter():
     return render_template("waiter.html")
 
-# 廚房頁面路由：顯示訂單查看頁面
+# 廚房頁面路由
 @app.route("/kitchen")
 def kitchen():
     return render_template("kitchen.html")
 
-# 管理員頁面路由：處理菜單管理
+# 管理員頁面路由
 @app.route("/admin", methods=["GET", "POST"])
 def admin_menu():
     if request.method == "POST":
@@ -73,7 +78,6 @@ def admin_menu():
                 db.session.delete(item)
                 db.session.commit()
             return redirect(url_for("admin_menu"))
-   
     items = MenuItem.query.order_by(MenuItem.category, MenuItem.id).all()
     menu_items = [item.to_dict() for item in items]
     return render_template("admin.html", menu_items=menu_items)
@@ -83,10 +87,10 @@ def admin_menu():
 def get_menu():
     try:
         items = MenuItem.query.filter_by(available=1).order_by(MenuItem.category, MenuItem.name).all()
-        print(f"Retrieved {len(items)} menu items")
+        logger.debug(f"Retrieved {len(items)} menu items")
         return jsonify([item.to_dict() for item in items])
     except Exception as e:
-        print(f"Menu query error: {e}")
+        logger.error(f"Menu query error: {e}")
         return jsonify({"error": "無法獲取菜單"}), 500
 
 # API 端點：管理訂單
@@ -109,25 +113,25 @@ def manage_orders():
             )
             db.session.add(new_order)
             db.session.commit()
-            print(f"New order created: {new_order.order_number}")
-            socketio.emit("new_order", new_order.to_dict())  # 移除 broadcast=True
+            logger.info(f"New order created: {new_order.order_number}")
+            socketio.emit("new_order", new_order.to_dict())
             return jsonify({"message": "訂單已送出", "order": new_order.to_dict()}), 201
         except Exception as e:
             db.session.rollback()
-            print(f"Order creation error: {e}")
+            logger.error(f"Order creation error: {e}")
             return jsonify({"error": "送出訂單失敗，請稍後重試"}), 500
     elif request.method == "GET":
         try:
             filter_status = request.args.get("filter", "all")
-            print(f"Fetching orders with filter: {filter_status}")
+            logger.debug(f"Fetching orders with filter: {filter_status}")
             if filter_status == "all":
                 orders = Order.query.all()
             else:
                 orders = Order.query.filter_by(status=filter_status).all()
-            print(f"Retrieved {len(orders)} orders")
+            logger.debug(f"Retrieved {len(orders)} orders")
             return jsonify([order.to_dict() for order in orders])
         except Exception as e:
-            print(f"Order query error: {e}")
+            logger.error(f"Order query error: {e}")
             return jsonify({"error": "無法獲取訂單"}), 500
 
 # API 端點：更新訂單狀態
@@ -142,12 +146,12 @@ def update_order_status(order_id):
         order.status = new_status
         order.updated_at = datetime.utcnow()
         db.session.commit()
-        print(f"Order {order.order_number} status updated to {new_status}")
-        socketio.emit("order_updated", order.to_dict())  # 移除 broadcast=True
+        logger.info(f"Order {order.order_number} status updated to {new_status}")
+        socketio.emit("order_updated", order.to_dict())
         return jsonify(order.to_dict())
     except Exception as e:
         db.session.rollback()
-        print(f"Order status update error: {e}")
+        logger.error(f"Order status update error: {e}")
         return jsonify({"error": "更新訂單狀態失敗"}), 500
 
 # API 端點：刪除訂單
@@ -157,48 +161,44 @@ def delete_order(order_id):
         order = Order.query.get_or_404(order_id)
         db.session.delete(order)
         db.session.commit()
-        print(f"Order {order.order_number} deleted")
-        socketio.emit("order_deleted", {"order_id": order_id})  # 移除 broadcast=True
+        logger.info(f"Order {order.order_number} deleted")
+        socketio.emit("order_deleted", {"order_id": order_id})
         return jsonify({"message": "訂單已刪除"}), 200
     except Exception as e:
         db.session.rollback()
-        print(f"Order deletion error: {e}")
+        logger.error(f"Order deletion error: {e}")
         return jsonify({"error": "刪除訂單失敗"}), 500
 
-# 新增數據頁面路由：顯示數據分析頁面
+# 數據頁面路由
 @app.route("/data")
 def data():
-    """渲染數據分析頁面，顯示訂單統計和圖表"""
     return render_template("data.html")
 
-# 新增分析 API：從 database.py 獲取統計數據
+# 分析 API
 @app.route("/api/analytics", methods=["GET"])
 def get_analytics():
-    """從 database.py 的 get_sales_analytics 獲取訂單統計數據
-    參數：
-        date: 'today', 'yesterday', 'last_7_days' 或自訂日期 (e.g., '2025-11-05')
-        category: 'all' 或特定類別 (e.g., 'main_dish')
-    """
     date_filter = request.args.get("date", "today")
     category_filter = request.args.get("category", "all")
+    logger.debug(f"Analytics request: date={date_filter}, category={category_filter}")
     try:
         analytics_data = get_sales_analytics(date_filter, category_filter)
+        if not analytics_data.get("total_orders") and not analytics_data.get("items"):
+            logger.warning("No analytics data found, returning default response")
+            return jsonify({"total_orders": 0, "total_revenue": 0.00, "items": []}), 200
         return jsonify(analytics_data)
     except Exception as e:
-        print(f"Analytics error: {e}")
+        logger.error(f"Analytics error: {e}")
         return jsonify({"error": "獲取分析數據失敗"}), 500
 
 # SocketIO 事件處理
 @socketio.on('connect')
 def handle_connect():
-    print('Client connected')
+    logger.info('Client connected')
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    print('Client disconnected')
+    logger.info('Client disconnected')
 
 # 啟動應用程式
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=10000)
-
-
