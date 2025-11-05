@@ -21,7 +21,9 @@ socket.on('order_updated', (order) => {
 async function loadMenu() {
     try {
         const response = await fetch('/api/menu');
-        menu = await response.json();
+        const data = await response.json();
+        console.log('Menu data:', data);
+        menu = Array.isArray(data) ? data : [];
         displayMenu();
     } catch (error) {
         console.error('Error loading menu:', error);
@@ -31,6 +33,10 @@ async function loadMenu() {
 
 function displayMenu() {
     const container = document.getElementById('menu-container');
+    if (!container) {
+        console.error('Menu container not found');
+        return;
+    }
     container.innerHTML = '';
     if (menu.length === 0) {
         container.innerHTML = '<div class="col-12 text-center p-5 text-muted">目前菜單是空的。請前往 /admin 頁面新增菜單。</div>';
@@ -50,7 +56,7 @@ function displayMenu() {
                             <p class="card-text text-muted small">${item.description || '無介紹'}</p>
                             <div class="mt-auto d-flex justify-content-between align-items-center pt-2">
                                 <span class="badge bg-secondary">${item.category}</span>
-                                <span class="fs-5 fw-bold text-success">NT$${item.price.toFixed(2)}</span>
+                                <span class="fs-5 fw-bold text-success">NT$$ {item.price.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>
@@ -63,7 +69,10 @@ function displayMenu() {
 
 function addToCart(itemId) {
     const menuItem = menu.find(item => item.id === itemId);
-    if (!menuItem) return;
+    if (!menuItem) {
+        console.warn('Menu item not found:', itemId);
+        return;
+    }
     const existingItem = cart.find(item => item.id === itemId);
     if (existingItem) {
         existingItem.quantity += 1;
@@ -83,6 +92,10 @@ function addToCart(itemId) {
 function updateCart() {
     const container = document.getElementById('cart-items');
     const submitBtn = document.getElementById('submit-order-btn');
+    if (!container || !submitBtn) {
+        console.error('Cart elements not found');
+        return;
+    }
     if (cart.length === 0) {
         container.innerHTML = '<p class="text-muted text-center py-4">購物車是空的。請從菜單新增項目。</p>';
         submitBtn.disabled = true;
@@ -101,7 +114,7 @@ function updateCart() {
                     <button class="btn btn-sm btn-outline-secondary qty-btn" onclick="decreaseQuantity(${index})">-</button>
                     <span class="quantity">${item.quantity}</span>
                     <button class="btn btn-sm btn-outline-secondary qty-btn" onclick="increaseQuantity(${index})">+</button>
-                    <span class="ms-auto text-success fw-bold">$${(item.price * item.quantity).toFixed(2)}</span>
+                    <span class="ms-auto text-success fw-bold"> $${(item.price * item.quantity).toFixed(2)}</span>
                 </div>
             </div>
         `;
@@ -130,17 +143,27 @@ function removeFromCart(index) {
 
 function updateTotal() {
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
-    calculateChange(); // 觸發找零計算
+    const totalElement = document.getElementById('cart-total');
+    if (totalElement) {
+        totalElement.textContent = `$${total.toFixed(2)}`;
+        calculateChange();
+    } else {
+        console.error('Cart total element not found');
+    }
 }
 
 function calculateChange() {
-    const total = parseFloat(document.getElementById('cart-total').textContent.replace('$', '')) || 0;
-    const payment = parseFloat(document.getElementById('payment-amount').value) || 0;
+    const totalElement = document.getElementById('cart-total');
+    const paymentInput = document.getElementById('payment-amount');
     const changeSpan = document.getElementById('change-amount');
     const errorSpan = document.getElementById('payment-error');
+    if (!totalElement || !paymentInput || !changeSpan || !errorSpan) {
+        console.error('Payment elements not found');
+        return;
+    }
+    const total = parseFloat(totalElement.textContent.replace('$', '')) || 0;
+    const payment = parseFloat(paymentInput.value) || 0;
     const change = payment - total;
-
     if (change >= 0) {
         changeSpan.textContent = `找零：$${change.toFixed(2)}`;
         errorSpan.textContent = '';
@@ -153,18 +176,21 @@ function calculateChange() {
 function clearCart() {
     cart = [];
     updateCart();
-    document.getElementById('order-notes').value = '';
-    calculateChange(); // 清除購物車時重置找零
+    const notesInput = document.getElementById('order-notes');
+    if (notesInput) notesInput.value = '';
+    calculateChange();
 }
 
 async function submitOrder() {
+    console.log('Submitting order...'); // 調試開始
     if (cart.length === 0) {
         showNotification('購物車是空的！', 'warning');
         return;
     }
-    const notes = document.getElementById('order-notes').value;
+    const notes = document.getElementById('order-notes')?.value || '';
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const payment = parseFloat(document.getElementById('payment-amount').value) || 0;
+    const paymentInput = document.getElementById('payment-amount');
+    const payment = paymentInput ? parseFloat(paymentInput.value) || 0 : 0;
     if (payment < total) {
         showNotification('付款金額不足，無法提交！', 'danger');
         return;
@@ -180,12 +206,14 @@ async function submitOrder() {
         total_amount: total,
         notes: notes
     };
+    console.log('Order data:', orderData); // 調試數據
     try {
         const response = await fetch('/api/orders', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(orderData)
         });
+        console.log('Response status:', response.status); // 調試狀態
         const result = await response.json();
         document.getElementById('modal-order-number').textContent = result.order_number;
         const modal = new bootstrap.Modal(document.getElementById('orderSuccessModal'));
@@ -199,6 +227,10 @@ async function submitOrder() {
 
 function showNotification(message, type = 'info') {
     const container = document.getElementById('order-status');
+    if (!container) {
+        console.error('Notification container not found');
+        return;
+    }
     const alert = document.createElement('div');
     alert.className = `alert alert-${type} alert-dismissible fade show`;
     alert.innerHTML = `
@@ -211,5 +243,10 @@ function showNotification(message, type = 'info') {
 
 document.getElementById('submit-order-btn').addEventListener('click', submitOrder);
 document.getElementById('clear-cart-btn').addEventListener('click', clearCart);
-document.getElementById('payment-amount').addEventListener('input', calculateChange); // 付款輸入觸發找零
+const paymentInput = document.getElementById('payment-amount');
+if (paymentInput) {
+    paymentInput.addEventListener('input', calculateChange);
+} else {
+    console.error('Payment input not found');
+}
 loadMenu();
