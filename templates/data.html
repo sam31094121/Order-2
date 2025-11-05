@@ -11,6 +11,7 @@
         .filter-group { margin-bottom: 20px; }
         .card { margin-bottom: 20px; }
         #categoryChart { max-height: 400px; }
+        #loading-placeholder { display: none; }
     </style>
 </head>
 <body>
@@ -26,21 +27,31 @@
             <div class="filter-group col-12 mb-4">
                 <div class="row g-2">
                     <div class="col-md-4">
+                        <label for="date-filter" class="form-label">日期篩選</label>
                         <select id="date-filter" class="form-select">
                             <option value="today">今日</option>
                             <option value="yesterday">昨日</option>
                             <option value="last_7_days">過去 7 天</option>
-                            <option value="2025-11-05">自訂日期 (2025-11-05)</option>
+                            <option value="custom">自訂日期</option>
                         </select>
                     </div>
                     <div class="col-md-4">
+                        <label for="category-filter" class="form-label">類別篩選</label>
                         <select id="category-filter" class="form-select">
                             <option value="all">所有類別</option>
                             <!-- 動態填充類別 -->
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <button id="refresh-data" class="btn btn-primary w-100">刷新數據</button>
+                    <div class="col-md-2">
+                        <button id="refresh-btn" class="btn btn-primary w-100">刷新數據</button>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="export-btn" class="btn btn-secondary w-100">匯出 CSV</button>
+                    </div>
+                </div>
+                <div id="loading-placeholder" class="text-center mt-2">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">載入中...</span>
                     </div>
                 </div>
             </div>
@@ -50,7 +61,7 @@
 
             <!-- 總覽卡片 -->
             <div class="col-md-4">
-                <div class="card text-bg-light">
+                <div class="card text-bg-info">
                     <div class="card-header">總訂單數</div>
                     <div class="card-body">
                         <h2 id="total-orders" class="card-title text-primary">0</h2>
@@ -58,10 +69,10 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card text-bg-light">
+                <div class="card text-bg-success">
                     <div class="card-header">總銷售額 (NT$)</div>
                     <div class="card-body">
-                        <h2 id="total-revenue" class="card-title text-success">$0.00</h2>
+                        <h2 id="total-revenue" class="card-title text-white">0.00</h2>
                     </div>
                 </div>
             </div>
