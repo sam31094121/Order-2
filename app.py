@@ -11,9 +11,7 @@ import io
 # 初始化 Flask 應用程式
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', os.urandom(24))
-
-# 禁用 JSON 轉義，確保 UTF-8 編碼
-app.config['JSON_AS_ASCII'] = False  # 關鍵修正 1：防止非 ASCII 字元轉義
+app.config['JSON_AS_ASCII'] = False  # 防止 JSON 轉義非 ASCII 字元（如中文）
 
 # 資料庫配置
 database_url = os.getenv('DATABASE_URL')
@@ -42,10 +40,6 @@ socketio = SocketIO(app, async_mode='gevent')
 # 設定日誌
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
-# 創建資料庫表
-with app.app_context():
-    db.create_all()
 
 # 根路由
 @app.route("/")
@@ -232,7 +226,7 @@ def export_orders_csv():
         output.seek(0)
         return Response(
             output.getvalue(),
-            mimetype="text/csv; charset=utf-8",  # 關鍵修正 2：明確聲明 UTF-8
+            mimetype="text/csv; charset=utf-8",
             headers={"Content-Disposition": "attachment; filename=orders_export.csv"}
         )
     except Exception as e:
