@@ -56,7 +56,7 @@ function displayMenu() {
                             <p class="card-text text-muted small">${item.description || '無介紹'}</p>
                             <div class="mt-auto d-flex justify-content-between align-items-center pt-2">
                                 <span class="badge bg-secondary">${item.category}</span>
-                                <span class="fs-5 fw-bold text-success">NT$$ {item.price.toFixed(2)}</span>
+                                <span class="fs-5 fw-bold text-success">NT$ ${item.price.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>
@@ -114,7 +114,7 @@ function updateCart() {
                     <button class="btn btn-sm btn-outline-secondary qty-btn" onclick="decreaseQuantity(${index})">-</button>
                     <span class="quantity">${item.quantity}</span>
                     <button class="btn btn-sm btn-outline-secondary qty-btn" onclick="increaseQuantity(${index})">+</button>
-                    <span class="ms-auto text-success fw-bold"> $${(item.price * item.quantity).toFixed(2)}</span>
+                    <span class="ms-auto text-success fw-bold">NT$ ${(item.price * item.quantity).toFixed(2)}</span>
                 </div>
             </div>
         `;
@@ -145,7 +145,7 @@ function updateTotal() {
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const totalElement = document.getElementById('cart-total');
     if (totalElement) {
-        totalElement.textContent = `$${total.toFixed(2)}`;
+        totalElement.textContent = `NT$ ${total.toFixed(2)}`;
         calculateChange();
     } else {
         console.error('Cart total element not found');
@@ -161,15 +161,15 @@ function calculateChange() {
         console.error('Payment elements not found');
         return;
     }
-    const total = parseFloat(totalElement.textContent.replace('$', '')) || 0;
+    const total = parseFloat(totalElement.textContent.replace('NT$', '').trim()) || 0;
     const payment = parseFloat(paymentInput.value) || 0;
     const change = payment - total;
     if (change >= 0) {
-        changeSpan.textContent = `找零：$${change.toFixed(2)}`;
+        changeSpan.textContent = `找零：NT$ ${change.toFixed(2)}`;
         errorSpan.textContent = '';
     } else {
-        changeSpan.textContent = `找零：$0.00`;
-        errorSpan.textContent = `付款不足 $${(-change).toFixed(2)}`;
+        changeSpan.textContent = `找零：NT$ 0.00`;
+        errorSpan.textContent = `付款不足 NT$ ${(-change).toFixed(2)}`;
     }
 }
 
@@ -215,7 +215,7 @@ async function submitOrder() {
         });
         console.log('Response status:', response.status); // 調試狀態
         const result = await response.json();
-        document.getElementById('modal-order-number').textContent = result.order_number;
+        document.getElementById('modal-order-number').textContent = result.order.order_number;
         const modal = new bootstrap.Modal(document.getElementById('orderSuccessModal'));
         modal.show();
         clearCart();
