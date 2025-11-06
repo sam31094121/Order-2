@@ -1,14 +1,19 @@
 import os
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, Response
 from flask_socketio import SocketIO
 from datetime import datetime
 import json
 from urllib.parse import urlparse
 import logging
+import csv
+import io
 
 # 初始化 Flask 應用程式
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', os.urandom(24))
+
+# 禁用 JSON 轉義，確保 UTF-8 編碼
+app.config['JSON_AS_ASCII'] = False  # 關鍵修正 1：防止非 ASCII 字元轉義
 
 # 資料庫配置
 database_url = os.getenv('DATABASE_URL')
@@ -102,7 +107,7 @@ def manage_orders():
             if not data or "items" not in data or not data["items"]:
                 return jsonify({"error": "訂單內容為空"}), 400
             order_number = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-            items_json = json.dumps(data["items"])
+            items_json = json.dumps(data["items"], ensure_ascii=False)  # 確保 UTF-8 編碼
             total_amount = sum(item["price"] * item["quantity"] for item in data["items"])
             new_order = Order(
                 order_number=order_number,
@@ -174,7 +179,7 @@ def delete_order(order_id):
 def data():
     return render_template("data.html")
 
-# 分析 API
+# API 端點：獲取分析數據
 @app.route("/api/analytics", methods=["GET"])
 def get_analytics():
     date_filter = request.args.get("date", "today")
@@ -189,6 +194,50 @@ def get_analytics():
     except Exception as e:
         logger.error(f"Analytics error: {e}")
         return jsonify({"error": "獲取分析數據失敗"}), 500
+
+# API 端點：匯出 CSV
+@app.route("/api/export/orders", methods=["GET"])
+def export_orders_csv():
+    try:
+        # 獲取所有訂單
+        orders = Order.query.all()
+        if not orders:
+            return jsonify({"error": "無訂單數據可匯出"}), 404
+
+        # 創建 CSV 緩衝區
+        output = io.StringIO()
+        writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL, encoding='utf-8')
+
+        # 寫入 UTF-8 BOM
+        output.write('\ufeff')  # 確保 Excel 識別 UTF-8
+
+        # 寫入標題
+        writer.writerow(["訂單號", "總金額", "狀態", "備註", "創建時間", "更新時間", "項目"])
+
+        # 寫入數據
+        for order in orders:
+            items = json.loads(order.items)
+            items_str = "; ".join([f"{item.get('name', '')} x{item.get('quantity', 1)}" for item in items])
+            writer.writerow([
+                order.order_number,
+                order.total_amount,
+                order.status,
+                order.notes or "",
+                order.created_at.isoformat() if order.created_at else "",
+                order.updated_at.isoformat() if order.updated_at else "",
+                items_str
+            ])
+
+        # 準備回應，明確指定 UTF-8 編碼
+        output.seek(0)
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv; charset=utf-8",  # 關鍵修正 2：明確聲明 UTF-8
+            headers={"Content-Disposition": "attachment; filename=orders_export.csv"}
+        )
+    except Exception as e:
+        logger.error(f"CSV export error: {e}")
+        return jsonify({"error": "匯出 CSV 失敗"}), 500
 
 # SocketIO 事件處理
 @socketio.on('connect')
